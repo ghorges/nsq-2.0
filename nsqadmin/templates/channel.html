@@ -1,0 +1,130 @@
+
+{{template "header.html" .}}
+
+<ul class="breadcrumb">
+  <li><a href="/">Streams</a> <span class="divider">/</span></li>
+  <li><a href="/topic/{{.Topic}}">{{.Topic}}</a> <span class="divider">/</span></li>
+  <li class="active">{{.Channel}}</li>
+</ul>
+
+<div class="row-fluid"><div class="span12">
+<h1>Topic: {{.Topic}}</h1>
+<h2>Channel: {{.Channel}}</h2>
+</div></div>
+
+<div class="row-fluid">
+    <div class="span2">
+        <form action="/empty_channel" method="GET">
+            <input type="hidden" name="topic" value="{{.ChannelStats.Topic}}">
+            <input type="hidden" name="channel" value="{{.ChannelStats.ChannelName}}">
+            <button class="btn btn-medium btn-warning" type="submit">Empty Queue</button>
+        </form>
+    </div>
+    <div class="span2">
+        <form action="/delete_channel" method="GET">
+            <input type="hidden" name="topic" value="{{.ChannelStats.Topic}}">
+            <input type="hidden" name="channel" value="{{.ChannelStats.ChannelName}}">
+            <button class="btn btn-medium btn-danger" type="submit">Delete Channel</button>
+        </form>
+    </div>
+    <div class="span2">
+        {{if .ChannelStats.Paused}}
+        <form action="/unpause_channel" method="GET">
+            <input type="hidden" name="topic" value="{{.ChannelStats.Topic}}">
+            <input type="hidden" name="channel" value="{{.ChannelStats.ChannelName}}">
+            <button class="btn btn-medium btn-success" type="submit">UnPause Channel</button>
+        </form>
+        {{else}}
+        <form action="/pause_channel" method="GET">
+            <input type="hidden" name="topic" value="{{.ChannelStats.Topic}}">
+            <input type="hidden" name="channel" value="{{.ChannelStats.ChannelName}}">
+            <button class="btn btn-medium btn-inverse" type="submit">Pause Channel</button>
+        </form>
+        {{end}}
+    </div>
+</div>
+
+<div class="row-fluid"><div class="span12">
+<h3>Channel Message Queue</h3>
+<table class="table table-bordered table-condensed">
+    <tr>
+        <th>Host</th>
+        <th>Depth</th>
+        <th>Memory + Disk</th>
+        <th>In-Flight</th>
+        <th>Deferred</th>
+        <th>Requeued</th>
+        <th>Timed Out</th>
+        <th>Messages</th>
+        <th>Connections</th>
+    </tr>
+
+{{range $c := .ChannelStats.HostStats}}
+    <tr>
+        <td>{{$c.HostAddress}}{{if $c.Paused}} <span class="label label-important">paused</span>{{end}}</td>
+        <td>{{$c.Depth | commafy}}</td>
+        <td>{{$c.MemoryDepth | commafy}} + {{$c.BackendDepth | commafy}}</td>
+        <td>{{$c.InFlightCount | commafy}}</td>
+        <td>{{$c.DeferredCount | commafy}}</td>
+        <td>{{$c.RequeueCount | commafy}}</td>
+        <td>{{$c.TimeoutCount | commafy}}</td>
+        <td>{{$c.MessageCount | commafy}}</td>
+        <td>{{$c.ClientCount}}</td>
+    </tr>
+{{ end }}
+{{ with $c := .ChannelStats }}
+    <tr class="info">
+        <td>Total:</td>
+        <td>{{$c.Depth | commafy}}</td>
+        <td>{{$c.MemoryDepth | commafy}} + {{$c.BackendDepth | commafy}}</td>
+        <td>{{$c.InFlightCount | commafy}}</td>
+        <td>{{$c.DeferredCount | commafy}}</td>
+        <td>{{$c.RequeueCount | commafy}}</td>
+        <td>{{$c.TimeoutCount | commafy}}</td>
+        <td>{{$c.MessageCount | commafy}}</td>
+        <td>{{$c.ClientCount}}</td>
+    </tr>
+{{ end }}
+</table>
+</div></div>
+
+<h3>Client Connections</h3>
+
+<div class="row-fluid"><div class="span12">
+{{if not .ChannelStats.Clients}}
+<p>No Clients connected to this channel.</p>
+{{else}}
+<table class="table table-bordered table-condensed">
+    <tr>
+        <th>Client Host</th>
+        <th>Protocol</th>
+        <th>NSQd Host</th>
+        <th>In-Flight</th>
+        <th>Ready Count</th>
+        <th>Finished</th>
+        <th>Requeued</th>
+        <th>Messages</th>
+        <th>Connected</th>
+    </tr>
+
+{{range .ChannelStats.Clients}}
+    <tr>
+        <td>{{.ClientIdentifier}}</td>
+        <td>{{.ClientVersion}}</td>
+        <td>{{.HostAddress}}</td>
+        <td>{{.InFlightCount | commafy}}</td>
+        <td>{{.ReadyCount | commafy}}</td>
+        <td>{{.FinishCount | commafy}}</td>
+        <td>{{.RequeueCount | commafy}}</td>
+        <td>{{.MessageCount | commafy}}</td>
+        <td>{{.ConnectedDuration}}</td>
+    </tr>
+{{end}}
+</table>
+{{end}}
+</div></div>
+
+
+{{template "footer.html" .}}
+
+
